@@ -67,7 +67,7 @@
             <div class="center">
                 <div class="item">
                     <span class="icon icon-2"></span>
-                    <input type="text" name="username" lay-verify="required"  placeholder="请输入登录账号" maxlength="24"/>
+                    <input type="text" name="userName" lay-verify="required"  placeholder="请输入登录账号" maxlength="24"/>
                 </div>
 
                 <div class="item">
@@ -100,11 +100,12 @@
 <script src="../lib/layui-v2.5.5/layui.js" charset="utf-8"></script>
 <script src="../js/lay-config.js" charset="utf-8"></script>
 <script>
-    layui.use(['form','jquery','axios'], function () {
+    layui.use(['form','jquery','axios','store'], function () {
         var $ = layui.jquery,
             form = layui.form,
             axios = layui.axios,
             layer = layui.layer;
+            store = layui.store;
 
         // 登录过期的时候，跳出ifram框架
         if (top.location != self.location) top.location = self.location;
@@ -130,20 +131,22 @@
         // 进行登录操作
         form.on('submit(login)', function (data) {
             data = data.field;
-
             axios({
                 method: 'post',
-                url: 'http://127.0.0.1:8888/dormitory/login',
+                url: '/login',
                 data:data
             }).then(function(data){
-                console.log(data);
-            }).catch(function(error){
-                    console.log(error);
-            });
-
-
-            layer.msg('登录成功', function () {
+                if(data.code == 0){
+                    store.setToken(data.data.token);
+                    layer.msg('登录成功', function () {
                 window.location = 'index.html';
+            });
+                }else{
+                    layer.msg('用户名或密码错误');
+                }
+                
+            }).catch(function(error){
+                    layer.msg(error);
             });
             return false;
         });

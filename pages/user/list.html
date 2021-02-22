@@ -1,0 +1,183 @@
+<div class="layuimini-container layuimini-page-anim">
+    <div class="layuimini-main">
+
+        <fieldset class="table-search-fieldset">
+            <legend>搜索信息</legend>
+            <div style="margin: 10px 10px 10px 10px">
+                <form class="layui-form layui-form-pane" action="">
+                    <div class="layui-form-item">
+                        <div class="layui-inline">
+                            <label class="layui-form-label">用户名</label>
+                            <div class="layui-input-inline">
+                                <input type="text" name="userName" autocomplete="off" class="layui-input">
+                            </div>
+                        </div>
+                        <div class="layui-inline">
+                            <label class="layui-form-label">姓名</label>
+                            <div class="layui-input-inline">
+                                <input type="text" name="name" autocomplete="off" class="layui-input">
+                            </div>
+                        </div>
+                        <div class="layui-inline">
+                            <button type="submit" class="layui-btn layui-btn-primary"  lay-submit lay-filter="data-search-btn"><i class="layui-icon"></i> 搜 索</button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </fieldset>
+
+        <script type="text/html" id="toolbarDemo">
+            <div class="layui-btn-container">
+                <button class="layui-btn layui-btn-normal layui-btn-sm data-add-btn" lay-event="add"> 添加 </button>
+                <button class="layui-btn layui-btn-normal layui-btn-sm data-add-btn" lay-event="update"> 修改 </button>
+                <button class="layui-btn layui-btn-sm layui-btn-danger data-delete-btn" lay-event="delete"> 删除 </button>
+            </div>
+        </script>
+
+        <table class="layui-hide" id="currentTableId" lay-filter="currentTableFilter"></table>
+
+        <!-- <script type="text/html" id="currentTableBar">
+            <a class="layui-btn layui-btn-normal layui-btn-xs data-count-edit" lay-event="edit">编辑</a>
+            <a class="layui-btn layui-btn-xs layui-btn-danger data-count-delete" lay-event="delete">删除</a>
+        </script> -->
+
+    </div>
+</div>
+
+<script>
+    layui.use(['form', 'table','miniPage','element','miniAdmin','form','axios'], function () {
+        var $ = layui.jquery,
+            form = layui.form,
+            table = layui.table,
+            miniAdmin = layui.miniAdmin,
+            form = layui.form,
+            axios = layui.axios,
+            miniPage = layui.miniPage;
+
+        table.render({
+            elem: '#currentTableId',
+            method: 'post',
+            url: 'user/query',
+            toolbar: '#toolbarDemo',
+            defaultToolbar: ['filter', 'exports', 'print', {
+                title: '提示',
+                layEvent: 'LAYTABLE_TIPS',
+                icon: 'layui-icon-tips'
+            }],
+            cols: [[
+                {type: "checkbox", width: 50},
+                {field: 'id', width: 80, title: 'ID'},
+                {field: 'userName', width: 120, title: '用户名'},
+                {field: 'name', width: 120, title: '姓名'},
+                {field: 'phone', width: 80, title: '手机号'},
+                {field: 'type', title: '类型',templet:function(row){
+                    if(row.type == 0){
+                        return '<span class="layui-badge layui-bg-orange">管理员</span>'
+                    }else {
+                        return '<span class="layui-badge layui-bg-green">宿管员</span>'
+                    }
+                }},
+                {field: 'remark', width: 80, title: '备注'},
+                // {title: '操作', minWidth: 150, toolbar: '#currentTableBar', align: "center"}
+            ]],
+            limits: [10, 15, 20, 25, 50, 100],
+            limit: 10,
+            page: true,
+            skin: 'line'
+        });
+
+        // 监听搜索操作
+        form.on('submit(data-search-btn)', function (data) {
+            //执行搜索重载
+            table.reload('currentTableId', {
+                where: data.field
+            }, 'data');
+
+            return false;
+        });
+
+        /**
+         * toolbar事件监听
+         */
+        table.on('toolbar(currentTableFilter)', function (obj) {
+            if (obj.event === 'add') {   // 监听添加操作
+                let content = miniPage.getHrefContent('user/add.html');
+                let openWH = miniPage.getOpenWidthHeight();
+                let index = layer.open({
+                    title: '添加用户',
+                    type: 1,
+                    shade: 0.2,
+                    maxmin:true,
+                    shadeClose: true,
+                    area: [openWH[0] + 'px', openWH[1] + 'px'],
+                    offset: [openWH[2] + 'px', openWH[3] + 'px'],
+                    content: content,
+                });
+                $(window).on("resize", function () {
+                    layer.full(index);
+                });
+            } else if (obj.event === 'delete') {  // 监听删除操作
+
+                let data = table.checkStatus('currentTableId').data;
+                if(data.length == 0){
+                    miniAdmin.error("请选择要删除的数据!");
+                }else{
+                    
+                    layer.confirm('真的删除行么', function (index) {
+                        var arr = data.map(item=>item.id);
+                        axios.get('user/delete?ids='+ arr.join(",")).then(function(res){
+                                table.reload("currentTableId");
+                                layer.msg(res.msg);
+                        }).catch(function(error){
+                            layer.msg(error);
+                        });
+                        layer.close(index);
+                    });
+
+                }
+
+                // var checkStatus = table.checkStatus('currentTableId')
+                //     , data = checkStatus.data;
+                // layer.alert(JSON.stringify(data));
+            } else if (obj.event === 'update') {
+
+                let data = table.checkStatus('currentTableId').data;
+                if(data.length != 1){
+                    miniAdmin.error("请选择一条记录修改");
+                }else{
+                    let content = miniPage.getHrefContent('user/update.html');
+                    let openWH = miniPage.getOpenWidthHeight();
+                    let index = layer.open({
+                        title: '修改用户',
+                        type: 1,
+                        shade: 0.2,
+                        maxmin:true,
+                        shadeClose: true,
+                        area: [openWH[0] + 'px', openWH[1] + 'px'],
+                        offset: [openWH[2] + 'px', openWH[3] + 'px'],
+                        content: content,
+                    });
+
+                    setFormValue(data[0]);
+                    $(window).on("resize", function () {
+                        layer.full(index);
+                    });
+                }
+
+            }
+        });
+
+        function setFormValue(data){
+            form.val("updateForm",{
+                        userName:data.userName,
+                        id:data.id,
+                        name:data.name,
+                        password:data.password,
+                        phone:data.phone,
+                        remark:data.remark,
+                        type:data.type,
+                    })
+        }
+
+    });
+</script>

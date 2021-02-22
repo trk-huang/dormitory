@@ -27,4 +27,7 @@ layui.config({
     wangEditor: 'wangEditor/wangEditor', // wangEditor富文本扩展
     layarea: 'layarea/layarea', //  省市县区三级联动下拉选择器
     axios: 'axios/axios',      // axios网络数据加载
+    store: 'store/store',      // store
+    ztree: 'ztree/ztree',      // ztree
+    selectOrg: 'select/org',      // selectOrg
 });

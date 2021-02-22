@@ -1,15 +1,18 @@
+
+
 /**
  * date:2020/02/27
  * author:Mr.Chung
  * version:2.0
  * description:layuimini 主体框架扩展
  */
-layui.define(["jquery", "miniMenu", "element","miniPage", "miniTheme"], function (exports) {
+layui.define(["jquery", "miniMenu", "element","miniPage", "miniTheme",'axios'], function (exports) {
     var $ = layui.$,
         element = layui.element,
         layer = layui.layer,
         miniMenu = layui.miniMenu,
         miniTheme = layui.miniTheme,
+        axios = layui.axios,
         miniPage = layui.miniPage;
 
     if (!/http(s*):\/\//.test(location.href)) {
@@ -39,25 +42,28 @@ layui.define(["jquery", "miniMenu", "element","miniPage", "miniTheme"], function
             options.menuChildOpen = options.menuChildOpen || false;
             options.loadingTime = options.loadingTime || 1;
             options.pageAnim = options.pageAnim || false;
-            $.getJSON(options.iniUrl, function (data) {
+
+
+
+            axios.get(options.iniUrl).then(function (data) {
                 if (data == null) {
                     miniAdmin.error('暂无菜单信息')
                 } else {
-                    miniAdmin.renderLogo(data.logoInfo);
+                    // miniAdmin.renderLogo(data.logoInfo);
                     miniAdmin.renderClear(options.clearUrl);
                     miniAdmin.renderAnim(options.pageAnim);
                     miniAdmin.listen({
-                        homeInfo:data.homeInfo,
+                        homeInfo:data.data.homeInfo,
                         multiModule: options.multiModule,
                     });
                     miniMenu.render({
-                        menuList: data.menuInfo,
+                        menuList: data.data.menuInfo,
                         multiModule: options.multiModule,
                         menuChildOpen: options.menuChildOpen
                     });
                     miniPage.render({
-                        homeInfo:data.homeInfo,
-                        menuList: data.menuInfo,
+                        homeInfo:data.data.homeInfo,
+                        menuList: data.data.menuInfo,
                         multiModule: options.multiModule,
                         renderPageVersion: options.renderPageVersion,
                         menuChildOpen: options.menuChildOpen,
@@ -71,9 +77,46 @@ layui.define(["jquery", "miniMenu", "element","miniPage", "miniTheme"], function
                     });
                     miniAdmin.deleteLoader(options.loadingTime);
                 }
-            }).fail(function () {
-                miniAdmin.error('菜单接口有误');
+            }).catch(function(error){
+                console.log(error);
+                miniAdmin.error(error);
             });
+
+            // $.getJSON(options.iniUrl, function (data) {
+            //     if (data == null) {
+            //         miniAdmin.error('暂无菜单信息')
+            //     } else {
+            //         miniAdmin.renderLogo(data.logoInfo);
+            //         miniAdmin.renderClear(options.clearUrl);
+            //         miniAdmin.renderAnim(options.pageAnim);
+            //         miniAdmin.listen({
+            //             homeInfo:data.homeInfo,
+            //             multiModule: options.multiModule,
+            //         });
+            //         miniMenu.render({
+            //             menuList: data.menuInfo,
+            //             multiModule: options.multiModule,
+            //             menuChildOpen: options.menuChildOpen
+            //         });
+            //         miniPage.render({
+            //             homeInfo:data.homeInfo,
+            //             menuList: data.menuInfo,
+            //             multiModule: options.multiModule,
+            //             renderPageVersion: options.renderPageVersion,
+            //             menuChildOpen: options.menuChildOpen,
+            //             listenSwichCallback: function () {
+            //                 miniAdmin.renderDevice();
+            //             }
+            //         });
+            //         miniTheme.render({
+            //             bgColorDefault: options.bgColorDefault,
+            //             listen: true,
+            //         });
+            //         miniAdmin.deleteLoader(options.loadingTime);
+            //     }
+            // }).fail(function () {
+            //     miniAdmin.error('菜单接口有误');
+            // });
         },
 
         /**

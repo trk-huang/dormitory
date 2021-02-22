@@ -1,0 +1,110 @@
+<div class="layuimini-main">
+
+    <div class="layui-form layuimini-form">
+        <div class="layui-form-item">
+            <label class="layui-form-label required">名称</label>
+            <div class="layui-input-block">
+                <input type="text" name="name" lay-verify="required" lay-reqtext="名称不能为空" placeholder="请输入名称" value="" class="layui-input">
+            </div>
+        </div>
+
+        <div class="layui-form-item">
+            <label class="layui-form-label required">上级栏目</label>
+            <div class="layui-input-block">
+                <input id="parentId" type="hidden" name="parentId" lay-verify="required" lay-reqtext="上级栏目不能为空" placeholder="请选择上级栏目" value="" class="layui-input">
+                <input id="parentName" type="text" name="parentName" readOnly lay-verify="required" lay-reqtext="上级栏目不能为空" placeholder="请选择上级栏目" value="" class="layui-input">
+            </div>
+        </div>
+
+        <div class="layui-form-item">
+            <label class="layui-form-label required">类型</label>
+            <div class="layui-input-block">
+                <select name="type" lay-verify="required" >
+                    <option value="">请选择类型</option>
+                    <option value="1">学院</option>
+                    <option value="2">系</option>
+                    <option value="3">专业</option>
+                    <option value="4">班级</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="layui-form-item">
+            <label class="layui-form-label required">年级</label>
+            <div class="layui-input-block">
+                <select id='gradeId' name="gradeId" lay-verify="required" >
+                </select>
+            </div>
+        </div>
+
+        <div class="layui-form-item layui-form-text">
+            <label class="layui-form-label">备注信息</label>
+            <div class="layui-input-block">
+                <textarea name="remark" class="layui-textarea" placeholder="请输入备注信息"></textarea>
+            </div>
+        </div>
+
+        <div class="layui-form-item">
+            <div class="layui-input-block">
+                <button class="layui-btn layui-btn-normal" lay-submit lay-filter="saveBtn">确认保存</button>
+            </div>
+        </div>
+    </div>
+</div>
+<script>
+    layui.use(['form', 'table', 'axios','miniAdmin','selectOrg'], function () {
+        var form = layui.form,
+            layer = layui.layer,
+            table = layui.table,
+            axios = layui.axios,
+            selectOrg = layui.selectOrg,
+            miniAdmin = layui.miniAdmin,
+            $ = layui.$;
+
+        /**
+         * 初始化表单，要加上，不然刷新部分组件可能会不加载
+         */
+        form.render();
+
+        // 当前弹出层，防止ID被覆盖
+        var parentIndex = layer.index;
+
+        //监听提交
+        form.on('submit(saveBtn)', function (data) {
+
+            axios.post('org/create',data.field).then(function(response){
+                // 关闭弹出层
+                if(response.code == 0){
+                    miniAdmin.success(response.msg);
+                    window.reload();
+                }
+                layer.close(parentIndex);
+            }).catch(function(error){
+                layer.msg(error);
+            });
+            return true;
+        });
+
+        axios.post('grade/query',{}).then(function(response){
+                let options = '<option value="">请选择年级</option>';
+                for(let obj of response.data){
+                    options += '<option value="' + obj.id + '">' + obj.name + '</option>';
+                }
+                console.log(options);
+                $('#gradeId').append(options);
+                form.render('select');
+        }).catch(function(error){
+            layer.msg(error);
+        });
+
+        selectOrg.render({
+            elem:'#parentName',
+            selected:[],
+            checked:false,
+            done:function(data){
+                    $('#parentId').val(data[0].id);
+                    $('#parentName').val(data[0].name);
+            }
+        })
+    });
+</script>

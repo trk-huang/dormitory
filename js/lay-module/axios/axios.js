@@ -1,5 +1,6 @@
 
-layui.define(function(exports){
+layui.define(['store'],function(exports){
+	var store = layui.store;
 /* axios v0.21.1 | (c) 2020 by Matt Zabriskie */
 (function webpackUniversalModuleDefinition(root, factory) {
 	if(typeof exports === 'object' && typeof module === 'object')
@@ -1758,12 +1759,20 @@ return /******/ (function(modules) { // webpackBootstrap
 //# sourceMappingURL=axios.map
 
 axios.interceptors.request.use(function(config){
+	if(store.getToken()){
+		config.headers.token = store.getToken();
+	}
+	
 	return config;
 },function(error){
 	return Promise.reject(error);
 });
 
 axios.interceptors.response.use(function(response){
+	console.log(response);
+	if(response.headers.token){
+		store.setToken(response.headers.token);
+	}	
 	const res = response.data;
 	if(response.status == 200){
 		if(res.code == 0){ //后端返回的数据为0的时候，即为正常数据。
@@ -1777,6 +1786,8 @@ axios.interceptors.response.use(function(response){
 },function(error){
 	return Promise.reject(error);
 })
+
+axios.defaults.baseURL = "http://localhost:8888/dormitory";
   //输出test接口
   exports('axios', axios);
 });    
