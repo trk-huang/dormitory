@@ -1,0 +1,138 @@
+<div class="layuimini-main">
+
+    <div class="layui-form layuimini-form">
+        <div class="layui-form-item">
+            <label class="layui-form-label required">学号</label>
+            <div class="layui-input-block">
+                <input type="text" name="stuNo" lay-verify="required" lay-reqtext="学号不能为空" placeholder="请输入学号"
+                    value="" class="layui-input">
+            </div>
+        </div>
+
+        <div class="layui-form-item">
+            <label class="layui-form-label">姓名</label>
+            <div class="layui-input-block">
+                <input type="text" name="name" placeholder="请输入姓名" value="" lay-verify="required" class="layui-input">
+            </div>
+        </div>
+
+        <div class="layui-form-item">
+            <label class="layui-form-label">身份证号</label>
+            <div class="layui-input-block">
+                <input type="text" name="idcard" placeholder="请输入身份证号" value="" lay-verify="required" class="layui-input">
+            </div>
+        </div>
+
+
+        <div class="layui-form-item">
+            <label class="layui-form-label required">年级</label>
+            <div class="layui-input-block">
+                <select id='gradeId' name="gradeId" lay-verify="required" >
+                </select>
+            </div>
+        </div>
+
+        <div class="layui-form-item">
+            <label class="layui-form-label required">班级</label>
+            <div class="layui-input-block">
+                <input id="clazzId" type="hidden" name="clazzId" lay-verify="required" lay-reqtext="班级不能为空" placeholder="班级不能为空" value="" class="layui-input">
+                <input id="clazzName" type="text" name="clazzName" readOnly lay-verify="required" lay-reqtext="班级不能为空" placeholder="班级不能为空" value="" class="layui-input">
+            </div>
+        </div>
+
+        <div class="layui-form-item">
+            <label class="layui-form-label required">密码</label>
+            <div class="layui-input-block">
+                <input type="password" name="password" lay-verify="required" lay-reqtext="密码不能为空" placeholder="请输入密码"
+                    value="123456" class="layui-input">
+                <tip>默认密码是123456</tip>
+            </div>
+        </div>
+
+        <div class="layui-form-item">
+            <label class="layui-form-label required">手机</label>
+            <div class="layui-input-block">
+                <input type="number" name="phone" lay-verify="required" lay-reqtext="手机不能为空" placeholder="请输入手机"
+                    value="" class="layui-input">
+            </div>
+        </div>
+
+
+
+        <div class="layui-form-item">
+            <label class="layui-form-label required">性别</label>
+            <div class="layui-input-block">
+                <select name="sex" lay-verify="required">
+                    <option value="1">男</option>
+                    <option value="0">女</option>
+                </select>
+            </div>
+        </div>
+
+
+        <div class="layui-form-item">
+            <div class="layui-input-block">
+                <button class="layui-btn layui-btn-normal" lay-submit lay-filter="saveBtn">确认保存</button>
+            </div>
+        </div>
+    </div>
+</div>
+<script>
+    layui.use(['form', 'table', 'axios', 'miniAdmin','selectOrg'], function () {
+        let form = layui.form,
+            layer = layui.layer,
+            table = layui.table,
+            axios = layui.axios,
+            selectOrg = layui.selectOrg,
+            miniAdmin = layui.miniAdmin,
+            $ = layui.$;
+
+        /**
+         * 初始化表单，要加上，不然刷新部分组件可能会不加载
+         */
+        form.render();
+
+        // 当前弹出层，防止ID被覆盖
+        let parentIndex = layer.index;
+
+        selectOrg.render({
+            elem:'#clazzName',
+            selected:[],
+            checked:false,
+            onlyLeaf:true,
+            done:function(data){
+                    $('#clazzId').val(data[0].id);
+                    $('#clazzName').val(data[0].name);
+            },
+        });
+
+        axios.post('grade/query',{}).then(function(response){
+                let options = '<option value="">请选择年级</option>';
+                for(let obj of response.data){
+                    options += '<option value="' + obj.id + '">' + obj.name + '</option>';
+                }
+                console.log(options);
+                $('#gradeId').append(options);
+                form.render('select');
+        }).catch(function(error){
+            layer.msg(error);
+        });
+
+        //监听提交
+        form.on('submit(saveBtn)', function (data) {
+
+            axios.post('student/create', data.field).then(function (response) {
+                // 关闭弹出层
+                if (response.code == 0) {
+                    miniAdmin.success(response.msg);
+                    layui.table.reload('currentTableId');
+                }
+                layer.close(parentIndex);
+            }).catch(function (error) {
+                layer.msg(error);
+            });
+            return true;
+        });
+
+    });
+</script>
